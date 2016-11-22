@@ -601,5 +601,44 @@ namespace Internal.TypeSystem
                 return HasInstantiation && IsTypeDefinition;
             }
         }
+
+        public uint GetSDIIndex()
+        {
+            switch (Category)
+            {
+                case TypeFlags.Void:
+                    return 0x0003;
+                case TypeFlags.Boolean:
+                    return 0x0030;
+                case TypeFlags.Char:
+                    return 0x0010;
+                case TypeFlags.SByte:
+                    return 0x0010; // ?
+                case TypeFlags.Byte:
+                    return 0x0020;
+                case TypeFlags.Int16:
+                    return 0x0072;
+                case TypeFlags.UInt16:
+                    return 0x0073;
+                case TypeFlags.Int32:
+                    return 0x0074;
+                case TypeFlags.UInt32:
+                    return 0x0075;
+                case TypeFlags.Int64:
+                    return 0x0076;
+                case TypeFlags.UInt64:
+                    return 0x0077;
+                case TypeFlags.IntPtr:
+                    return 0; // ?
+                case TypeFlags.UIntPtr:
+                    return 0; // ?
+                case TypeFlags.Single:
+                    return 0x0040;
+                case TypeFlags.Double:
+                    return 0x0041;
+                default:
+                    return 0;
+            }
+        }
     }
 }

@@ -165,6 +165,43 @@ namespace Internal.JitInterface
                     {
                         SetParameterNames(parameters);
                     }
+                    _variableToTypeIndex = new Dictionary<uint, uint>();
+                    Console.WriteLine("new method");
+
+                    var signature = MethodBeingCompiled.Signature;
+                    uint index = 0;
+                    if (!signature.IsStatic)
+                    {
+                        TypeDesc td = signature.ReturnType;
+                        Console.Write("this param");
+                        Console.WriteLine(td);
+                        Console.WriteLine("write index 0");
+                        SetVariableTypeIndex(td, index);
+                        index++;
+                    }
+                    else
+                    {
+                        Console.WriteLine("no this");
+                    }
+                    
+                    for (int i = 0; i < signature.Length; ++i)
+                    {
+                        TypeDesc td = signature[i];
+                        Console.Write("param");
+                        Console.WriteLine(td);
+                        Console.WriteLine("write index " + index);
+                        SetVariableTypeIndex(td, index);
+                        ++index;
+                    }
+                    var locals = methodIL.GetLocals();
+                    for(int i = 0; i < locals.Length; ++i)
+                    {
+                        TypeDesc td = locals[i].Type;
+                        Console.WriteLine("write index " + index);
+                        SetVariableTypeIndex(td, index);
+                        index++;
+                    }
+                   
                 }
                 catch (Exception e)
                 {
@@ -1735,6 +1772,16 @@ namespace Internal.JitInterface
             _parameterIndexToNameMap = parameterIndexToNameMap;
         }
 
+        public void SetVariableTypeIndex(TypeDesc td, uint index)
+        {
+            uint typeIndex = 0;
+            if (td.IsPrimitive)
+            {
+                typeIndex = td.GetSDIIndex();
+            }
+            _variableToTypeIndex[index] = typeIndex;
+        }
+
         private void getBoundaries(CORINFO_METHOD_STRUCT_* ftn, ref uint cILOffsets, ref uint* pILOffsets, BoundaryTypes* implicitBoundaries)
         {
             // TODO: Debugging
@@ -1858,13 +1905,14 @@ namespace Internal.JitInterface
         private void updateDebugVarInfo(Dictionary<uint, DebugVarInfo> debugVars, string name,
                                         bool isParam, NativeVarInfo nativeVarInfo)
         {
+            Console.WriteLine("read index " + nativeVarInfo.varNumber);
+
             DebugVarInfo debugVar;
 
             if (!debugVars.TryGetValue(nativeVarInfo.varNumber, out debugVar))
             {
-                // TODO: Force an INT32 type (0x0074 in CodeView) for now. Fix it later.
-                // ISSUE #784. 
-                debugVar = new DebugVarInfo(name, isParam, typeIndex : 0x0074);
+
+                debugVar = new DebugVarInfo(name, isParam, _variableToTypeIndex[nativeVarInfo.varNumber]);
                 debugVars[nativeVarInfo.varNumber] = debugVar;
             }
 
@@ -2774,6 +2822,7 @@ namespace Internal.JitInterface
         private Dictionary<uint, string> _parameterIndexToNameMap;
         private DebugLocInfo[] _debugLocInfos;
         private DebugVarInfo[] _debugVarInfos;
+        private Dictionary<uint, uint> _variableToTypeIndex;
 
         private void allocMem(uint hotCodeSize, uint coldCodeSize, uint roDataSize, uint xcptnsCount, CorJitAllocMemFlag flag, ref void* hotCodeBlock, ref void* coldCodeBlock, ref void* roDataBlock)
         {
