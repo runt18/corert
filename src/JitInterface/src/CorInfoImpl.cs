@@ -172,7 +172,7 @@ namespace Internal.JitInterface
                     uint index = 0;
                     if (!signature.IsStatic)
                     {
-                        TypeDesc td = signature.ReturnType;
+                        TypeDesc td = MethodBeingCompiled.OwningType;
                         Console.Write("this param");
                         Console.WriteLine(td);
                         Console.WriteLine("write index 0");
